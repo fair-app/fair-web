@@ -293,9 +293,12 @@ const steps = [
   },
 ]
 
+/* Web3Forms public access key — safe to ship in the client */
+const WEB3FORMS_KEY = '6bdc2f4f-07f5-4fd4-b5ed-f3c1335df3b3'
+
 export default function App() {
   const [form, setForm] = useState({ name: '', mobile: '', email: '' })
-  const [sent, setSent] = useState(false)
+  const [status, setStatus] = useState('') // '' | 'sending' | 'success' | 'error'
   const [menuOpen, setMenuOpen] = useState(false)
   const closeMenu = () => setMenuOpen(false)
   const [countryIso, setCountryIso] = useState('DE')
@@ -333,12 +336,30 @@ export default function App() {
 
   const update = (field) => (e) => {
     setForm({ ...form, [field]: e.target.value })
-    setSent(false)
+    setStatus('')
   }
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-    setSent(true)
+    setStatus('sending')
+
+    const formData = new FormData(e.target)
+    const country = countries.find((c) => c.iso === countryIso)
+    formData.append('access_key', WEB3FORMS_KEY)
+    formData.append('subject', 'New driver registration - Fair')
+    formData.append('country', `${country.name} (${country.dial})`)
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await response.json()
+      setStatus(data.success ? 'success' : 'error')
+      if (data.success) setForm({ name: '', mobile: '', email: '' })
+    } catch {
+      setStatus('error')
+    }
   }
 
   return (
@@ -474,6 +495,7 @@ export default function App() {
               Full name
               <input
                 type="text"
+                name="name"
                 value={form.name}
                 onChange={update('name')}
                 placeholder="As printed on your licence"
@@ -486,6 +508,7 @@ export default function App() {
                 <CountrySelect value={countryIso} onChange={setCountryIso} />
                 <input
                   type="tel"
+                  name="mobile"
                   value={form.mobile}
                   onChange={update('mobile')}
                   placeholder="10-digit mobile number"
@@ -498,15 +521,19 @@ export default function App() {
               Email ID
               <input
                 type="email"
+                name="email"
                 value={form.email}
                 onChange={update('email')}
                 placeholder="you@example.com"
                 required
               />
             </label>
-            <button className="btn btn-yellow btn-full" type="submit">Submit</button>
-            {sent && <p className="reg-note ok">Thanks, {form.name || 'driver'} - our team will call you shortly.</p>}
-            {!sent && <p className="reg-note">We only use these details to verify your registration.</p>}
+            <button className="btn btn-yellow btn-full" type="submit" disabled={status === 'sending'}>
+              {status === 'sending' ? 'Sending...' : 'Submit'}
+            </button>
+            {status === 'success' && <p className="reg-note ok">Thanks - our team will call you shortly.</p>}
+            {status === 'error' && <p className="reg-note err">Something went wrong. Please try again.</p>}
+            {status !== 'success' && status !== 'error' && <p className="reg-note">We only use these details to verify your registration.</p>}
           </form>
         </div>
       </section>

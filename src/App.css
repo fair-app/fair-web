@@ -429,6 +429,7 @@
 }
 .reg-note { margin: 0; font-size: 0.82rem; text-align: center; }
 .reg-note.ok { color: #1d7a45; font-weight: 700; }
+.reg-note.err { color: #b42318; font-weight: 700; }
 
 /* ---------- footer ---------- */
 .foot { background: #fff; border-top: 1px solid var(--line); padding-block: 30px; }
