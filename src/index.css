@@ -27,6 +27,11 @@ html {
   scroll-snap-type: y mandatory;
 }
 
+/* Snapping is paused while a registration field is focused, so typing isn't interrupted */
+html.no-snap {
+  scroll-snap-type: none;
+}
+
 body {
   margin: 0;
   background: var(--white);

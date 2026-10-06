@@ -300,6 +300,7 @@ export default function App() {
   const [form, setForm] = useState({ name: '', mobile: '', email: '' })
   const [status, setStatus] = useState('') // '' | 'sending' | 'success' | 'error'
   const [menuOpen, setMenuOpen] = useState(false)
+  const formRef = useRef(null)
   const closeMenu = () => setMenuOpen(false)
   const [countryIso, setCountryIso] = useState('DE')
 
@@ -332,6 +333,21 @@ export default function App() {
       })
 
     return () => { cancelled = true }
+  }, [])
+
+  // Pause section snapping while typing in the registration form (mobile keyboards otherwise snap the page to the top)
+  useEffect(() => {
+    const form = formRef.current
+    if (!form) return
+    const pause = () => document.documentElement.classList.add('no-snap')
+    const resume = () => document.documentElement.classList.remove('no-snap')
+    form.addEventListener('focusin', pause)
+    form.addEventListener('focusout', resume)
+    return () => {
+      form.removeEventListener('focusin', pause)
+      form.removeEventListener('focusout', resume)
+      resume()
+    }
   }, [])
 
   const update = (field) => (e) => {
@@ -489,7 +505,7 @@ export default function App() {
             <img className="reg-art" src="/imgs/taxi-img2.svg" alt="A taxi on the way to pick up a rider" />
           </div>
 
-          <form className="reg-form" onSubmit={submit}>
+          <form className="reg-form" onSubmit={submit} ref={formRef}>
             <h3>Driver registration</h3>
             <label>
               Full name
